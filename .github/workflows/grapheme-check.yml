@@ -1,0 +1,32 @@
+name: Grapheme abbreviation regression check
+
+on:
+  push:
+    branches: [validate/git-grapheme-abbreviation]
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 6fee16ad68c3628482f4442d0d731653bd8c3145
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - name: Confirm the new cases fail before the fix
+        run: |
+          if bun test ./src/widgets/__tests__/GitBranch.test.ts ./src/widgets/__tests__/GitWorktree.test.ts; then
+            echo "Expected the grapheme regression cases to fail before the fix"
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: fix/git-grapheme-abbreviation
+          persist-credentials: false
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - name: Confirm the same cases pass with the fix
+        run: bun test ./src/widgets/__tests__/GitBranch.test.ts ./src/widgets/__tests__/GitWorktree.test.ts
